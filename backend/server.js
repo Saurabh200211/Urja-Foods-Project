@@ -22,7 +22,7 @@ const app = express();
 
 // CORS Configuration
 const allowedOrigins = [
-  process.env.FRONTEND_URL || 'https://urja-foods-psi.vercel.app/',
+  process.env.FRONTEND_URL || 'https://urja-foods-project-one.vercel.app/',
   'http://localhost:3000',
   'http://localhost:5173',
   'http://127.0.0.1:5173',
