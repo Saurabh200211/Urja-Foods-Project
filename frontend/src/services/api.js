@@ -30,7 +30,17 @@ export async function apiRequest(endpoint, method = 'GET', data = null, customHe
 
   try {
     const response = await fetch(targetUrl, config);
-    const result = await response.json();
+    const contentType = response.headers.get('content-type') || '';
+
+    let result;
+    if (contentType.includes('application/json')) {
+      result = await response.json();
+    } else {
+      const textResponse = await response.text();
+      throw new Error(
+        `Server returned non-JSON response (${response.status} ${response.statusText}). Please verify your VITE_API_URL setting: ${targetUrl}`
+      );
+    }
 
     if (!response.ok) {
       throw new Error(result.message || `HTTP error! Status: ${response.status}`);
