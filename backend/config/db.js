@@ -1,16 +1,19 @@
 import mongoose from 'mongoose';
 
 const connectDB = async () => {
-  try {
-    const mongoURI = process.env.MONGO_URI || 'mongodb+srv://satputesaurabh169_db_user:4LoDtVMhBPtF4JMW@cluster0.bg21nlj.mongodb.net/urja_foods?retryWrites=true&w=majority&appName=Cluster0';
-    const conn = await mongoose.connect(mongoURI);
+  const mongoURI = process.env.MONGO_URI;
 
-    console.log(`MongoDB Connected: ${conn.connection.host}`);
+  try {
+    const conn = await mongoose.connect(mongoURI, {
+      serverSelectionTimeoutMS: 5000,
+    });
+    console.log(`✅ MongoDB Connected to Atlas: ${conn.connection.host}`);
   } catch (error) {
-    console.error(`MongoDB Connection Error: ${error.message}`);
-    // Do not exit process in dev if mongo is down, but log warning
-    if (process.env.NODE_ENV === 'production') {
-      process.exit(1);
+    console.error(`\n❌ MongoDB Atlas Connection Error: ${error.message}`);
+    if (error.message.includes('bad auth')) {
+      console.error(`👉 Cause: The password or username in MONGO_URI is incorrect in Database Access on Atlas.`);
+    } else {
+      console.error(`👉 Cause: Ensure IP Address 0.0.0.0/0 is added in Atlas Network Access.`);
     }
   }
 };
