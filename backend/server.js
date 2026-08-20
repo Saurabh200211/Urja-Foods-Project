@@ -1,100 +1,7 @@
-//import path from 'path';
-//import express from 'express';
-//import dotenv from 'dotenv';
-//import cors from 'cors';
-//import connectDB from './config/db.js';
-//import { notFound, errorHandler } from './middleware/errorMiddleware.js';
-
-//import authRoutes from './routes/authRoutes.js';
-//import productRoutes from './routes/productRoutes.js';
-//import serviceRoutes from './routes/serviceRoutes.js';
-//import enquiryRoutes from './routes/enquiryRoutes.js';
-//import newsletterRoutes from './routes/newsletterRoutes.js';
-//import reportRoutes from './routes/reportRoutes.js';
-
-//// Load environment variables
-//dotenv.config();
-
-//// Connect to MongoDB
-//connectDB();
-
-//const app = express();
-
-//// CORS Configuration
-//const allowedOrigins = [
-//  process.env.FRONTEND_URL || 'https://urja-foods-project-one.vercel.app/',
-//  'http://localhost:3000',
-//  'http://localhost:5173',
-//  'http://127.0.0.1:5173',
-//];
-
-//app.use(
-//  cors({
-//    origin: function (origin, callback) {
-//      // allow requests with no origin (like mobile apps or curl requests)
-//      if (!origin || allowedOrigins.includes(origin)) {
-//        return callback(null, true);
-//      }
-//      return callback(null, true); // Allow dev access smoothly
-//    },
-//    credentials: true,
-//    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-//    allowedHeaders: ['Content-Type', 'Authorization'],
-//  })
-//);
-
-//// Body Parser Middleware
-//app.use(express.json({ limit: '10mb' }));
-//app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-
-//// Static uploads folder
-//const __dirname = path.resolve();
-//app.use('/uploads', express.static(path.join(__dirname, '/uploads')));
-
-//// Health check endpoint
-//app.get('/api/health', (req, res) => {
-//  res.json({
-//    status: 'OK',
-//    message: 'Urja Foods Backend API is running smoothly',
-//    timestamp: new Date().toISOString(),
-//  });
-//});
-
-//// API Routes
-//app.use('/api/auth', authRoutes);
-//app.use('/api/products', productRoutes);
-//app.use('/api/services', serviceRoutes);
-//app.use('/api/enquiries', enquiryRoutes);
-//app.use('/api/newsletter', newsletterRoutes);
-//app.use('/api/reports', reportRoutes);
-
-//// Error Handling Middlewares
-//app.use(notFound);
-//app.use(errorHandler);
-
-//const PORT = process.env.PORT || 5000;
-
-//const server = app.listen(PORT, () => {
-//  console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
-//});
-
-//server.on('error', (error) => {
-//  if (error.code === 'EADDRINUSE') {
-//    console.error(`\n❌ Error: Port ${PORT} is already in use by another process.`);
-//    console.error(`👉 Solutions:`);
-//    console.error(`   1. Kill the process running on port ${PORT} (e.g. npx kill-port ${PORT})`);
-//    console.error(`   2. Or change PORT=${Number(PORT) + 1} in your backend/.env file\n`);
-//  } else {
-//    console.error('Server error:', error.message);
-//  }
-//});
-
-
 import path from 'path';
 import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
-
 import connectDB from './config/db.js';
 import { notFound, errorHandler } from './middleware/errorMiddleware.js';
 
@@ -105,104 +12,36 @@ import enquiryRoutes from './routes/enquiryRoutes.js';
 import newsletterRoutes from './routes/newsletterRoutes.js';
 import reportRoutes from './routes/reportRoutes.js';
 
-// ==========================================
-// LOAD ENVIRONMENT VARIABLES
-// ==========================================
-
+// Load environment variables
 dotenv.config();
 
-// ==========================================
-// CREATE EXPRESS APP
-// ==========================================
+// Connect to MongoDB
+connectDB();
 
 const app = express();
 
-// ==========================================
-// CONNECT TO MONGODB
-// ==========================================
-
-connectDB();
-
-// ==========================================
-// CORS CONFIGURATION
-// ==========================================
-
-const allowedOrigins = [
-  process.env.FRONTEND_URL || 'https://urja-foods-project-one.vercel.app',
-  'http://localhost:3000',
-  'http://localhost:5173',
-  'http://127.0.0.1:5173',
-];
-
+// CORS Configuration - Permissive for dev and local network access
 app.use(
   cors({
-    origin: function (origin, callback) {
-      // Allow requests without an origin
-      // Example: Postman, curl, mobile applications
-      if (!origin) {
-        return callback(null, true);
-      }
-
-      // Allow configured origins
-      if (allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      }
-
-      // Currently allow other origins as well.
-      // You can restrict this later for production.
-      return callback(null, true);
-    },
-
+    origin: true, // Allow all origins in development (bypasses CORS & loopback resets)
     credentials: true,
-
-    methods: [
-      'GET',
-      'POST',
-      'PUT',
-      'DELETE',
-      'PATCH',
-      'OPTIONS',
-    ],
-
-    allowedHeaders: [
-      'Content-Type',
-      'Authorization',
-    ],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
   })
 );
 
-// ==========================================
-// BODY PARSER
-// ==========================================
+// Enable OPTIONS preflight response for all routes
+app.options('*', cors());
 
-app.use(
-  express.json({
-    limit: '10mb',
-  })
-);
+// Body Parser Middleware
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-app.use(
-  express.urlencoded({
-    extended: true,
-    limit: '10mb',
-  })
-);
-
-// ==========================================
-// STATIC UPLOADS
-// ==========================================
-
+// Static uploads folder
 const __dirname = path.resolve();
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-app.use(
-  '/uploads',
-  express.static(path.join(__dirname, 'uploads'))
-);
-
-// ==========================================
-// ROOT ROUTE
-// ==========================================
-
+// Root route
 app.get('/', (req, res) => {
   res.status(200).json({
     success: true,
@@ -220,10 +59,7 @@ app.get('/', (req, res) => {
   });
 });
 
-// ==========================================
-// HEALTH CHECK
-// ==========================================
-
+// Health check endpoint
 app.get('/api/health', (req, res) => {
   res.status(200).json({
     success: true,
@@ -233,40 +69,34 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// ==========================================
-// API ROUTES
-// ==========================================
-
+// API Routes
 app.use('/api/auth', authRoutes);
-
 app.use('/api/products', productRoutes);
-
 app.use('/api/services', serviceRoutes);
-
 app.use('/api/enquiries', enquiryRoutes);
-
 app.use('/api/newsletter', newsletterRoutes);
-
 app.use('/api/reports', reportRoutes);
 
-// ==========================================
-// 404 NOT FOUND
-// ==========================================
-
+// Error Handling Middlewares
 app.use(notFound);
-
-// ==========================================
-// GLOBAL ERROR HANDLER
-// ==========================================
-
 app.use(errorHandler);
 
-// ==========================================
-// VERCEL EXPORT
-// ==========================================
+// Start Express Server for Local / Standalone execution
+const PORT = process.env.PORT || 5000;
 
-// IMPORTANT:
-// Do NOT use app.listen() here.
-// Vercel will handle the server automatically.
+if (process.env.NODE_ENV !== 'test' && !process.env.VERCEL) {
+  const server = app.listen(PORT, '0.0.0.0', () => {
+    console.log(`🚀 Server running in ${process.env.NODE_ENV || 'development'} mode on http://127.0.0.1:${PORT}`);
+  });
+
+  server.on('error', (error) => {
+    if (error.code === 'EADDRINUSE') {
+      console.error(`\n❌ Error: Port ${PORT} is already in use by another process.`);
+      console.error(`👉 Solution: Run 'npx kill-port ${PORT}' or change PORT in backend/.env\n`);
+    } else {
+      console.error('Server error:', error.message);
+    }
+  });
+}
 
 export default app;
