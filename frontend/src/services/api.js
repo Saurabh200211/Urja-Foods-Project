@@ -1,4 +1,5 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const RAW_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_URL = RAW_URL.replace(/\/+$/, '');
 
 /**
  * Generic API fetch wrapper supporting GET, POST, PUT, DELETE
@@ -24,8 +25,11 @@ export async function apiRequest(endpoint, method = 'GET', data = null, customHe
     config.body = JSON.stringify(data);
   }
 
+  const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  const targetUrl = `${API_URL}${cleanEndpoint}`;
+
   try {
-    const response = await fetch(`${API_URL}${endpoint}`, config);
+    const response = await fetch(targetUrl, config);
     const result = await response.json();
 
     if (!response.ok) {
@@ -34,7 +38,7 @@ export async function apiRequest(endpoint, method = 'GET', data = null, customHe
 
     return result;
   } catch (error) {
-    console.error(`API Error on ${method} ${endpoint}:`, error.message);
+    console.error(`API Error on ${method} ${targetUrl}:`, error.message);
     throw error;
   }
 }

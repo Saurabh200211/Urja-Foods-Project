@@ -33,11 +33,14 @@ export default function ContactPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (formData.name && formData.email) {
-      setLoading(true);
-      setErrorMessage("");
-      try {
-        await api.submitEnquiry(formData);
+    if (!formData.name || !formData.email) return;
+
+    setLoading(true);
+    setErrorMessage("");
+
+    try {
+      const res = await api.submitEnquiry(formData);
+      if (res && res.success) {
         setSubmitted(true);
         setFormData({
           name: "",
@@ -48,18 +51,15 @@ export default function ContactPage() {
         });
         setTimeout(() => {
           setSubmitted(false);
-        }, 5000);
-      } catch (err) {
-        // Fallback for UI if backend is offline
-        setSubmitted(true);
-        setErrorMessage("Submitted locally. (Backend server connection note: " + (err.message || "Offline") + ")");
-        setTimeout(() => {
-          setSubmitted(false);
-          setErrorMessage("");
-        }, 5000);
-      } finally {
-        setLoading(false);
+        }, 6000);
       }
+    } catch (err) {
+      console.error("Inquiry submission error:", err);
+      setErrorMessage(
+        err.message || "Failed to send inquiry to server. Please check your internet/backend connection."
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -162,12 +162,18 @@ export default function ContactPage() {
               Fill in your details below and our farm management team will get back to you within 24 hours.
             </p>
 
+            {errorMessage && (
+              <div className="mt-6 p-4 rounded-2xl bg-red-50 border border-red-200 text-red-700 text-sm font-semibold">
+                ⚠️ {errorMessage}
+              </div>
+            )}
+
             {submitted ? (
-              <div className="mt-8 p-6 rounded-2xl bg-lime-500 text-white text-center">
+              <div className="mt-8 p-6 rounded-2xl bg-lime-500 text-white text-center shadow-lg">
                 <CheckCircle2 className="h-12 w-12 mx-auto mb-3" />
                 <h3 className="text-xl font-bold">Thank You!</h3>
                 <p className="mt-1 text-sm text-lime-100">
-                  Your message has been received. Our representative will contact you shortly.
+                  Your message has been saved in our database. Our representative will contact you shortly.
                 </p>
               </div>
             ) : (
@@ -252,10 +258,11 @@ export default function ContactPage() {
 
                 <button
                   type="submit"
-                  className="w-full inline-flex items-center justify-center gap-2 rounded-2xl bg-lime-600 px-6 py-4 text-sm font-bold text-white hover:bg-lime-700 transition shadow-lg"
+                  disabled={loading}
+                  className="w-full inline-flex items-center justify-center gap-2 rounded-2xl bg-lime-600 px-6 py-4 text-sm font-bold text-white hover:bg-lime-700 disabled:opacity-50 transition shadow-lg"
                 >
                   <Send className="h-4 w-4" />
-                  Submit Inquiry
+                  {loading ? "Sending Inquiry..." : "Submit Inquiry"}
                 </button>
               </form>
             )}
